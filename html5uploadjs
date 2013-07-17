@@ -1,0 +1,68 @@
+/**
+ * HTML5 image uploader
+ * User: ag
+ * Date: 7/17/13
+ * Time: 8:40 PM
+ * Minimal Configuration :
+ * $(element).uploader({
+ *      onSuccess: function(callback){
+ *
+ *      }
+ * });
+ */
+$.fn.uploader = function (options) {
+    //setting default value
+    var element = this;
+    var defaults = {
+            onSuccess: function (callback) { },
+            resize:false,
+            max_width : 640,
+            max_height : 480
+        },
+        settings = $.extend({}, defaults, options);
+    if (window.File && window.FileReader && window.FileList && window.Blob) {
+        element.change(function () {
+            var files = this.files[0];
+            var reader = new FileReader();
+            reader.onloadend = function () {
+
+                var tempImg = new Image();
+                tempImg.src = reader.result;
+                tempImg.onload = function () {
+
+                    var MAX_WIDTH = settings.max_width;
+                    var MAX_HEIGHT = settings.max_height;
+                    var tempW = tempImg.width;
+                    var tempH = tempImg.height;
+                    if(settings.resize == true){
+                        if (tempW > tempH) {
+                            if (tempW > MAX_WIDTH) {
+                                tempH *= MAX_WIDTH / tempW;
+                                tempW = MAX_WIDTH;
+                            }
+                        } else {
+                            if (tempH > MAX_HEIGHT) {
+                                tempW *= MAX_HEIGHT / tempH;
+                                tempH = MAX_HEIGHT;
+                            }
+                        }
+                    }
+
+                    var canvas = document.createElement('canvas');
+                    canvas.width = tempW;
+                    canvas.height = tempH;
+                    var ctx = canvas.getContext("2d");
+                    ctx.drawImage(this, 0, 0, tempW, tempH);
+                    var dataURL = canvas.toDataURL("image/jpeg");
+                    //console.log(dataURL);
+                    return settings.onSuccess(dataURL);
+                }
+
+            }
+            reader.readAsDataURL(files);
+
+        });
+    } else {
+        alert('The File APIs are not fully supported in this browser.');
+    }
+}
